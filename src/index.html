@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>login</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@tauri-apps/api@1.0.0/tauri.js"></script>
+  <style>
+    .wrapper {
+       display: flex;
+       flex-direction: column;
+       justify-content: center;
+       align-items: center;
+       width: 100%;
+       max-width: 400px;
+       height: auto;
+       padding: 30px;
+       text-align: center;
+       background: rgba(49, 40, 40, 0.65);
+       border-radius: 16px;
+       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+       backdrop-filter: blur(3.6px);
+       -webkit-backdrop-filter: blur(3.6px);
+       border: 1px solid rgba(49, 40, 40, 0.31);
+       transition: all 1s ease, background-color 1s ease;
+       transition-property: all, background-color;
+       position: relative;
+    }
+    .wrapper.expand {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh; 
+      max-width: 100%;
+      max-height: 100%;
+      box-sizing: border-box;
+      background: rgba(2, 2, 2, 0.774);
+      box-shadow: 0 4px 50px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(3.6px);
+      -webkit-backdrop-filter: blur(3.6px);
+      border: 1px solid rgba(49, 40, 40, 0.31);
+      scale: 1.0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <form id="login-form">
+      <h2>Login</h2>
+      <div class="loader" id="loader" style="display: none;"></div>
+      <div class="form-group">
+        <input type="text" name="email" id="email" required>
+        <label>Enter your email</label>
+      </div>
+      <div class="form-group">
+        <input type="password" name="password" id="password" required>
+        <label>Enter your password</label>
+      </div>
+      <div class="forget">
+        <label for="remember">
+          <input type="checkbox" name="remember" id="remember">
+          <p>Remember me</p>
+        </label>
+      </div>
+      <div id="error-message" style="color: red;"></div>
+      <button type="submit">Log In</button>
+      <div class="register">
+        <p>Don't have an account? <a href="#" id="register-link">Register</a></p>
+      </div>
+    </form>
+  </div>
+  <script>
+    const { invoke } = window.__TAURI__.tauri;
+    const { readTextFile, exists, BaseDirectory } = window.__TAURI__.fs;
+
+    function showLoader() {
+      document.getElementById('loader').style.display = 'block';
+
+      const elementsToHide = [
+        document.getElementById('remember'),
+        document.getElementById('error-message'),
+        document.querySelector('button'),
+        ...document.getElementsByClassName('form-group'),
+        ...document.getElementsByClassName('forget'),
+        ...document.getElementsByClassName('register')
+      ];
+
+      elementsToHide.forEach(function(element) {
+        if (element instanceof HTMLElement) {
+          element.style.display = 'none';
+        }
+      });
+    }
+
+    function hideLoader() {
+      document.getElementById('loader').style.display = 'none';
+
+      const elementsToShow = [
+        document.getElementById('remember'),
+        document.getElementById('error-message'),
+        document.querySelector('button'),
+        ...document.getElementsByClassName('form-group'),
+        ...document.getElementsByClassName('forget'),
+        ...document.getElementsByClassName('register')
+      ];
+
+      elementsToShow.forEach(function(element) {
+        if (element instanceof HTMLElement) {
+          element.style.display = 'block';
+        }
+      });
+    }
+
+    function loadSavedLogin() {
+      exists('login_info.json', { dir: BaseDirectory.AppConfig })
+        .then((exists) => {
+          console.log('File exists:', exists);
+          if (exists) {
+            readTextFile('login_info.json', { dir: BaseDirectory.AppConfig })
+              .then((content) => {
+                const data = JSON.parse(content);
+                if (data.email && data.password) {
+                  document.getElementById('email').value = data.email;
+                  document.getElementById('password').value = data.password;
+                  document.getElementById('remember').checked = true;
+                  autoLogin();
+                }
+              })
+              .catch((error) => {
+                console.error('Error:', error);
+                document.getElementById('remember').checked = false;
+              });
+          } else {}
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+        });
+      
+    }
+    
+    function transitionToMain() {
+      const wrapper = document.querySelector('.wrapper');
+      wrapper.classList.add('expand'); // 확장 클래스 추가
+
+      setTimeout(() => {
+          window.location.href = 'main.html';
+      }, 1000); // 1초 후에 페이지 전환
+    }
+
+    function autoLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const remember = document.getElementById('remember').checked;
+      showLoader();
+
+      invoke('login', { loginInfo: { email: email, password: password, remember: remember } })
+        .then((data) => {
+          
+          if (data.message === 'Login successful') {
+            transitionToMain();
+          } else {
+            hideLoader();
+            document.getElementById('error-message').innerText = 'Invalid credentials';
+          }
+        })
+        .catch((error) => {
+          hideLoader();
+          document.getElementById('error-message').innerText = 'An error occurred. Please try again.';
+          console.error('Error:', error);
+        });
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      autoLogin();
+    });
+
+    document.getElementById('register-link').addEventListener('click', function(event) {
+      event.preventDefault();
+      window.open('https://developer.clashofclans.com/#/register', '_blank');
+    });
+
+    document.addEventListener('DOMContentLoaded', loadSavedLogin);
+  </script>
+</body>
+</html>

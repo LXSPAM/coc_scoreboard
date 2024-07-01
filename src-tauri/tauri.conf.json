@@ -1,0 +1,72 @@
+{
+  "build": {
+    "devPath": "../src",
+    "distDir": "../src",
+    "withGlobalTauri": true
+  },
+  "package": {
+    "productName": "scoreboard",
+    "version": "0.1.6"
+  },
+  "tauri": {
+    "updater": {
+      "active": true,
+      "windows": {
+        "installMode": "passive",
+        "installerArgs": []
+      },
+      "endpoints": [
+        "https://github.com/LXSPAM/coc_scoreboard/releases/latest/download/update.json"
+      ],
+      "dialog": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM5ODY1OTEzOTU5RkQ5RjkKUldUNTJaK1ZFMW1HT1VNZEFKRzVtUzhnN1A2ajdSWklVdmcvTEQrUkhCdE9HZkVsMnlOdVhZNlMK"
+    },
+    "allowlist": {
+      "all": true,
+      "shell": {
+        "all": true,
+        "open": true
+      },
+      "fs": {
+        "all": true, 
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "exists": true,
+        "scope": ["**"]
+      },
+      "path": {
+        "all": true
+      }
+    },
+    "windows": [
+      { 
+        "title": "rts",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "visible": true,
+        "focus": true,
+        "transparent": true,
+        "contentProtected": false,
+        "closable": true
+      }
+    ],
+    "security": {
+      "csp": null
+    },
+    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "rts",
+      "icon": [
+        "icons/icon.ico"
+      ]
+    }
+  }
+}

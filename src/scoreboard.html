@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>score-board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'KoreanFont';
+            src: url('./fonts/MangoDdobak-R(ttf).ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'Clash';
+            src: url('./fonts/Clash_Regular.ttf') format('truetype');
+            font-weight: normal;
+        }
+
+        @font-face {
+            font-family: 'Clash';
+            src: url('./fonts/Clash_Bold.ttf') format('truetype');
+            font-weight: bold;
+        }
+        :root {
+            --background-color: rgba(0, 0, 0, 0);
+            --text-color: #ffffff; 
+        }
+        body {
+            background-color: var(--background-color);
+            background-image: none;
+            background: transparent;
+            font-family: 'Clash', 'KoreanFont', sans-serif;
+        }
+        .img-40 {
+            max-width: 35px;
+            width: 100%;
+            align-self: center;
+        }
+    
+        .logo {
+            width: 100%;
+            height: 100%;
+            max-width: 125px;
+            max-height: 125px;
+            align-self: center;
+            align-items: center;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            align-items: center;
+            justify-items: center;
+            row-gap: 7.2px;
+            column-gap: 5px;
+        }   
+        .grid-item {
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            margin: 3px;
+        }
+        .draggable {
+            -webkit-app-region: drag !important;
+        }
+    </style>
+</head>
+<body class="text-white flex items-center justify-center min-h-screen" onload="init()">
+    <div class="grid-container draggable">
+        <img src="./assets/noting.png" class="grid-item logo" id="logo1"><div style="align-self: center;" class="grid-item text-3xl">VS</div><img src="./assets/noting.png" class="grid-item logo" id="logo2">
+        <div class="grid-item text-4xl mt-4" id="clan-star">0</div><img src="assets/star_white.png" alt="Star" class="grid-item img-40"><div class="grid-item text-4xl mt-4" id="opponent-star">0</div>
+        <div class="grid-item text-3xl mt-4" id="clan-percentage">00.0%</div><img src="assets/persent_white.png" alt="%" class="grid-item img-40"><div class="grid-item text-3xl mt-4" id="opponent-percentage">00.0%</div>
+        <div class="grid-item text-4xl mt-4" id="clan-duration">0:00</div><img src="assets/timer_white.png" alt="Timer" class="grid-item img-40"><div class="grid-item text-4xl mt-4" id="opponent-duration">0:00</div>
+        <div class="grid-item text-3xl mt-4" id="clan-attack">0 / 5</div><img src="assets/attack_white.png" alt="Attack" class="grid-item img-40"><div class="grid-item text-3xl mt-4" id="opponent-attack">0 / 5</div>    
+    </div>
+    <script>
+        const { invoke } = window.__TAURI__.invoke;
+        const { listen } = window.__TAURI__.event;
+        var opponent_badge= "";
+        var clan_badge = "";
+        listen('scoreboardUpdate', (event) => {
+            update_scoreboard(JSON.parse(event.payload.rep_data));
+        });
+
+        listen('logoupdate', (event) => {
+            update_logo(event.payload);
+        });
+
+        function init() {
+            document.getElementById('logo1').src = "./assets/noting.png";
+            document.getElementById('logo2').src = "./assets/noting.png";
+        }
+
+
+        function update_scoreboard(war_data) {
+            clan_badge = war_data.clan.badge;
+            opponent_badge = war_data.opponent.badge;
+            document.getElementById('clan-star').innerText = war_data.clan.stars;
+            document.getElementById('opponent-star').innerText = war_data.opponent.stars;
+            document.getElementById('clan-percentage').innerText = `${war_data.clan.percentage}%`;
+            document.getElementById('opponent-percentage').innerText = `${war_data.opponent.percentage}%`;
+            document.getElementById('clan-duration').innerText = war_data.clan.duration;
+            document.getElementById('opponent-duration').innerText = war_data.opponent.duration;
+            document.getElementById('clan-attack').innerText = `${war_data.clan.attacks}`;
+            document.getElementById('opponent-attack').innerText = `${war_data.opponent.attacks}`;
+        }
+
+        function update_logo(data) {
+            const option_logo_1 = data.logo_option1;
+            const option_logo_2 = data.logo_option2;
+            const clan_logo = data.logo1_file;
+            const opponent_logo = data.logo2_file;
+            const transparentImage = './assets/noting.png';
+
+            if (option_logo_1) {
+                if (clan_logo) {
+                    document.getElementById('logo1').src = `data:image/png;base64,${clan_logo}`;
+                } else {
+                    document.getElementById('logo1').src = clan_badge;
+                }
+            } else {
+                document.getElementById('logo1').src = transparentImage;
+            }
+
+            if (option_logo_2) {
+                if (opponent_logo) {
+                    document.getElementById('logo2').src = `data:image/png;base64,${opponent_logo}`;
+                } else {
+                    console.log(opponent_badge);
+                    document.getElementById('logo2').src = opponent_badge;
+                }
+            } else {
+                document.getElementById('logo2').src = transparentImage;
+            }
+        }
+    </script>
+</body>
+</html>
